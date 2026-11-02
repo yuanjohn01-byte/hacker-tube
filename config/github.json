@@ -1,0 +1,13 @@
+{
+  "version": "github-prep-v1",
+  "collection_enabled": false,
+  "classification_enabled": false,
+  "model": "jev-latest",
+  "picked": {"users": 3, "months": 3, "reasons": 1},
+  "recommend_min": 0.85,
+  "creator_max": 0.15,
+  "reason_min": 0.85,
+  "initial_hn_item_limit": 1000,
+  "initial_classification_limit": 20,
+  "notes": "Provisional rules from the roadmap; no existing DATA.md was available. Limits are for the future collector, not an implemented collection command."
+}

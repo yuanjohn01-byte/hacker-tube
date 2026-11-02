@@ -1,0 +1,37 @@
+{
+  "name": "hacker-tube",
+  "compatibility_date": "2026-07-01",
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [
+    {
+      "pattern": "hacker-tube.org",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.hacker-tube.org",
+      "custom_domain": true
+    }
+  ],
+  "assets": {
+    "directory": "./dist/client",
+    "binding": "ASSETS",
+    "html_handling": "none",
+    "not_found_handling": "none",
+    "run_worker_first": [
+      "/*",
+      "!/assets/*",
+      "!/data/*",
+      "!/og/*",
+      "!/favicon.svg",
+      "!/logo.png",
+      "!/robots.txt",
+      "!/sitemap.xml",
+      "!/video-sitemap.xml"
+    ]
+  },
+  "observability": {
+    "enabled": false
+  },
+  "main": "cloudflare/worker.js"
+}

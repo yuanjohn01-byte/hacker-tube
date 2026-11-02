@@ -1,20 +1,20 @@
 
   :root {
     --bg: #ffffff; --bg2: #f2f2f2; --bg3: #e5e5e5; --text: #0f0f0f; --muted: #606060;
-    --line: #e5e5e5; --accent: #ff6600; --chip: #f2f2f2; --chip-on: #0f0f0f; --chip-on-text: #ffffff;
+    --line: #e5e5e5; --accent: #b94700; --chip: #f2f2f2; --chip-on: #0f0f0f; --chip-on-text: #ffffff;
     --hover: rgba(0,0,0,.05); --good: #065fd4;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
       --bg: #0f0f0f; --bg2: #272727; --bg3: #3f3f3f; --text: #f1f1f1; --muted: #aaaaaa;
       --line: #303030; --chip: #272727; --chip-on: #f1f1f1; --chip-on-text: #0f0f0f;
-      --hover: rgba(255,255,255,.08); --good: #3ea6ff;
+      --accent: #ff8533; --hover: rgba(255,255,255,.08); --good: #3ea6ff;
     }
   }
   :root[data-theme="dark"] {
     --bg: #0f0f0f; --bg2: #272727; --bg3: #3f3f3f; --text: #f1f1f1; --muted: #aaaaaa;
     --line: #303030; --chip: #272727; --chip-on: #f1f1f1; --chip-on-text: #0f0f0f;
-    --hover: rgba(255,255,255,.08); --good: #3ea6ff;
+    --accent: #ff8533; --hover: rgba(255,255,255,.08); --good: #3ea6ff;
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--text); }

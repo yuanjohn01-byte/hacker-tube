@@ -7,6 +7,12 @@ async function json(name) {
 }
 export async function api(path) {
   const url = new URL(path, 'http://local'); const p = url.searchParams;
+  if(url.pathname === '/api/home') {
+    const offset = Number(p.get('offset') || 0);
+    if (offset === 0 && initialPage?.path === '/' && initialPage.items?.length) return initialPage.items;
+    if (!initialPage) return sortVideos((await json('videos')).filter(d=>d.shelf_life!=='news')).slice(offset,offset+36);
+    return json('home/' + (Math.floor(offset / 36) + 1));
+  }
   if(url.pathname === '/api/config') return {frames_source:'youtube'};
   if(url.pathname === '/api/browse') return json('browse');
   if(url.pathname === '/api/playlists') return json('playlists');

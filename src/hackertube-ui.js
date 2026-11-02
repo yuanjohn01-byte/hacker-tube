@@ -59,17 +59,17 @@ const sub = signal;
 // ---------- components ----------
 const card = (d) => `<a class="vcard" href="/watch/${d.vid}"${d.reason ? ` title="${esc(d.reason)}"` : ""}>${thumb(d)}
   <div class="info"><div style="min-width:0">
-    <h3 class="vt">${esc(d.title)}</h3><div class="sub">${esc(d.channel)}</div>
+    <h2 class="vt">${esc(d.title)}</h2><div class="sub">${esc(d.channel)}</div>
     <div class="sub">${sub(d)}</div></div></div></a>`;
 
 const row = (d) => `<a class="srow" href="/watch/${d.vid}">${thumb(d)}<div style="min-width:0">
-    <h3 class="vt">${esc(d.title)}</h3><div class="sub">${sub(d)}</div>
+    <h2 class="vt">${esc(d.title)}</h2><div class="sub">${sub(d)}</div>
     <div class="chan">${esc(d.channel)}</div>
     <div class="snip">${esc(d.summary)}</div>
     ${d.via ? `<span class="via">Topic match · ${esc(d.via)}</span>` : ""}</div></a>`;
 
 const next = (d) => `<a class="next" href="/watch/${d.vid}">${thumb(d)}<div style="min-width:0">
-    <h3 class="vt">${esc(d.title)}</h3><div class="sub">${esc(d.channel)}</div><div class="sub">${sub(d)}</div></div></a>`;
+    <h2 class="vt">${esc(d.title)}</h2><div class="sub">${esc(d.channel)}</div><div class="sub">${sub(d)}</div></div></a>`;
 
 // comment text: escape, then turn the link markers into small pills
 const commentHTML = (t) => esc(t).replace(/\[VIDEO\]/g, '<span class="mk v">▶ this video</span>').replace(/\[LINK\]/g, '<span class="mk">link</span>');
@@ -82,7 +82,9 @@ let pager = null;
 function infinite(container, load) {
   if (pager) pager.disconnect();
   const paginated = initialPage && /^\/(browse|c\/|a\/)/.test(location.pathname) && !filtering(filterParams()) && !filterParams().sort;
-  let offset = paginated ? (initialPage.page - 1) * 36 : 0, busy = false, done = false;
+  const existing = container.querySelectorAll('.vcard').length;
+  let offset = (paginated ? (initialPage.page - 1) * 36 : 0) + existing;
+  let busy = false, done = paginated && existing > 0;
   const sentinel = document.createElement("div"); sentinel.className = "sentinel";
   container.after(sentinel);
   const more = async () => {
@@ -96,11 +98,34 @@ function infinite(container, load) {
   };
   pager = new IntersectionObserver((e) => e[0].isIntersecting && more(), { rootMargin: "800px" });
   if (!paginated) pager.observe(sentinel);
-  if (paginated && initialPage.totalPages > 1) {
+  if (paginated && initialPage.totalPages > 1 && !view.querySelector('.pagination')) {
     const n=initialPage.page,total=initialPage.totalPages,p=location.pathname;
     sentinel.insertAdjacentHTML('afterend',`<nav class="pagination" aria-label="Video pages">${n>1?`<a class="pill" rel="prev" href="${p}${n>2?'?page='+(n-1):''}">Previous page</a>`:''}<span class="sub">Page ${n} of ${total}</span>${n<total?`<a class="pill" rel="next" href="${p}?page=${n+1}">Next page</a>`:''}</nav>`);
   }
-  more();
+  // Existing HTML is the first page. Fetch only when the reader reaches its end.
+  if (!existing) more();
+}
+
+// Enhance the controls without replacing the already visible, indexed cards.
+function setupListing(markup) {
+  const params = filterParams();
+  const reusable = initialPage?.path === location.pathname && !filtering(params) && !params.sort
+    && view.querySelector('#grid .vcard');
+  if (!reusable) { view.innerHTML = markup; return; }
+  const template = document.createElement('template');
+  template.innerHTML = markup;
+  const bar = view.querySelector('.filterbar');
+  bar.replaceWith(template.content.querySelector('.filterbar'));
+  view.querySelector('.filterbar').after(template.content.querySelector('.filters'));
+  const chips = view.querySelector('.type-chips');
+  if (chips && template.content.querySelector('.type-chips')) chips.replaceWith(template.content.querySelector('.type-chips'));
+  for (const image of view.querySelectorAll('img[data-vid]')) {
+    image.onerror = () => thumbFallback(image);
+    if (!useFrames) image.src = thumbSrc(image.dataset.vid);
+  }
+  for (const button of view.querySelectorAll('[data-later]')) {
+    if (watchLater.includes(button.dataset.later)) { button.classList.add('on'); button.innerHTML = CHECK; button.setAttribute('aria-label', 'Remove from Saved'); }
+  }
 }
 
 // ---------- pages ----------
@@ -114,13 +139,13 @@ async function home() {
   }
   if(!['all','videos'].includes(source)){view.innerHTML=sourcePage(source);return;}
   const params = filterParams();
-  view.innerHTML = `<h1 class="sr-only">Videos shared on Hacker News</h1>${typeChips(source)}${filterBar('/', {...params,source}, true, false)}<div class="grid" id="grid"></div>`;
+  setupListing(`<h1 class="sr-only">Videos shared on Hacker News</h1>${typeChips(source)}${filterBar('/', {...params,source}, true, false)}<div class="grid" id="grid"></div>`);
   wireFilterBar();
   areasCache ??= await api('/api/browse');
   const categories=areasCache.flatMap(a=>a.categories);
   $('#filters-btn').insertAdjacentHTML('afterend',`<label class="category-select">Category <select id="category-select"><option value="">All categories</option>${categories.map(c=>`<option value="${esc(c.id)}" ${params.cat===c.id?'selected':''}>${esc(c.name)}</option>`).join('')}</select></label>`);
   $('#category-select').onchange=e=>navigate(withParams('/',{...params,source,cat:e.target.value}));
-  infinite($('#grid'), offset=>api(withParams('/api/list',{...params,offset,n:36})));
+  infinite($('#grid'), offset=>api(withParams(!filtering(params) && !params.sort ? '/api/home' : '/api/list',{...params,offset,n:36})));
 }
 
 // one topic category, best first, with its area as a breadcrumb
@@ -131,8 +156,8 @@ async function category(id) {
   const c = a.categories.find(c => c.id === id);
   if (!initialPage?.meta) document.title = `${c.name} - HackerTube`;
   const params = filterParams();
-  view.innerHTML = `<div class="pagehead"><a class="crumb" href="/a/${a.id}">${esc(a.name)}</a><h1>${esc(c.name)}</h1></div>
-    ${filterBar(`/c/${id}`, params, true)}<div class="grid" id="grid"></div>`;
+  setupListing(`<div class="pagehead"><a class="crumb" href="/a/${a.id}">${esc(a.name)}</a><h1>${esc(c.name)}</h1></div>
+    ${filterBar(`/c/${id}`, params, true)}<div class="grid" id="grid"></div>`);
   wireFilterBar();
   infinite($("#grid"), (offset) => api(withParams("/api/list", { cat: id, ...params, offset, n: 36 })));
 }
@@ -142,9 +167,9 @@ async function browsePage() {
   if (!initialPage?.meta) document.title = (filterParams().dur === "xlong" ? "Longs" : "Browse all videos") + " - HackerTube";
   const params = filterParams();
   const longs = params.dur === "xlong";
-  view.innerHTML = `<div class="pagehead"><h1>${longs ? "Longs" : "All videos"}</h1>${longs
+  setupListing(`<div class="pagehead"><h1>${longs ? "Longs" : "All videos"}</h1>${longs
       ? `<p class="sub">Every video over an hour. The opposite of Shorts.</p>` : ""}</div>${filterBar("/browse", params, true)}
-    <div class="grid" id="grid"></div>`;
+    <div class="grid" id="grid"></div>`);
   wireFilterBar();
   infinite($("#grid"), (offset) => api(withParams("/api/list", { ...params, offset, n: 36 })));
 }
@@ -155,9 +180,9 @@ async function area(id) {
   const a = areasCache.find(x => x.id === id);
   if (!a) return notFound();
   const params = filterParams();
-  view.innerHTML = `${`<a class="crumb" href="/categories">Categories</a>`}<div class="pagehead"><h1>${esc(a.name)}</h1></div>
+  setupListing(`${`<a class="crumb" href="/categories">Categories</a>`}<div class="pagehead"><h1>${esc(a.name)}</h1></div>
     <div class="catwrap">${a.categories.map(c => `<a class="chip" href="/c/${c.id}">${esc(c.name)}</a>`).join("")}</div>
-    ${filterBar(`/a/${id}`, params, true)}<div class="grid" id="grid"></div>`;
+    ${filterBar(`/a/${id}`, params, true)}<div class="grid" id="grid"></div>`);
   wireFilterBar();
   infinite($("#grid"), (offset) => api(withParams("/api/list", { area: id, ...params, offset, n: 36 })));
 }
@@ -187,7 +212,7 @@ async function playlistPage(slug) {
     </div>
     <ol class="plrows">${pl.videos.map((d, i) => `<li><span class="num">${i + 1}</span>
       <a class="srow" href="/watch/${d.vid}">${thumb(d)}<div style="min-width:0">
-        <h3 class="vt">${esc(d.title)}</h3><div class="sub">${esc(d.channel)} · ${sub(d)}</div>
+        <h2 class="vt">${esc(d.title)}</h2><div class="sub">${esc(d.channel)} · ${sub(d)}</div>
         <p class="plnote">${esc(d.note)}</p></div></a></li>`).join("")}</ol>
   </div>`;
   wirePlayAll();

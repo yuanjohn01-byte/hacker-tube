@@ -13,6 +13,9 @@ test('home pagination preserves SSR order without gaps or duplicates',async()=>{
  assert.deepEqual(initial.items.map(d=>d.vid),actual.slice(0,36).map(d=>d.vid));
  assert.match(html,/<img loading="eager" fetchpriority="high"/);
  assert.match(html,/<h2 class="vt">/);
+ assert.ok(!html.includes('rel="stylesheet"'));
+ assert.ok(!initial.items.some(d=>'summary' in d));
+ for(const d of actual) assert.ok(d.title && d.channel && d.hn && Number.isFinite(d.hn.recommenders));
 });
 test('home API uses embedded first page and small static continuation, never full catalog',async()=>{
  const calls=[];

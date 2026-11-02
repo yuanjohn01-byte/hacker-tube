@@ -12,6 +12,8 @@ const byId=new Map(videos.map(d=>[d.vid,d]));
 const base=await readFile(path.join(dist,'index.html'),'utf8');
 const shell=await readFile(path.join(root,'src/shell.html'),'utf8');
 const script=(base.match(/<script type="module"[^>]*><\/script>/)||[''])[0],css=(base.match(/<link rel="stylesheet"[^>]*>/)||[''])[0];
+const inlineCSS='<style>'+await readFile(path.join(dist,css.match(/href="([^"]+)/)[1]),'utf8')+'</style>';
+const cardData=d=>({vid:d.vid,title:d.title,channel:d.channel,duration_s:d.duration_s,hn:{recommenders:d.hn.recommenders,first_year:d.hn.first_year??d.hn.first,last_year:d.hn.last_year??d.hn.last}});
 const ui=await readFile(path.join(root,'src/hackertube-ui.js'),'utf8');
 const icon=(key)=>ui.match(new RegExp(`const ${key} = '([^']+)';`))?.[1]||'';
 const clock=icon('CLOCK');
@@ -35,9 +37,10 @@ async function emit(p,kind,name,content,{doc,items=[],page=1,totalPages=1,noinde
  const meta=pageMeta({path:p,kind,name,doc,items,page,totalPages,noindex});
  if(kind==='category'||kind==='area'||kind==='playlist'){meta.image=ORIGIN+'/og/'+p.slice(1).replaceAll('/','-')+'.png';meta.imageAlt=name+' — HackerTube';if(page===1)ogPages.push({file:p.slice(1).replaceAll('/','-')+'.png',title:name,subtitle:kind==='playlist'?'A curated viewing path':'Videos shared on Hacker News'});}
  if(breadcrumbs.length){meta.graph.push({'@type':'BreadcrumbList',itemListElement:breadcrumbs.map(([name,url],i)=>({'@type':'ListItem',position:i+1,name,item:ORIGIN+url}))});}
- const payload={path:p,page,meta,items:items.filter(d=>d.vid),totalPages,...bootstrap};
+ const isListing=['home','browse','category','area'].includes(kind);
+ const payload={path:p,page,meta:isListing?{h1:meta.h1}:meta,items:items.filter(d=>d.vid).map(d=>isListing?cardData(d):d),totalPages,...bootstrap};
  const baseName=p==='/'?'index':p.slice(1),file=baseName+(page>1?'--page-'+page:'')+'.html';
- const html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${metadataHTML(meta)}<link rel="preconnect" href="https://i.ytimg.com"><link rel="icon" href="/favicon.svg" type="image/svg+xml">${hero?`<link rel="preload" as="image" href="${hero}" fetchpriority="high">`:''}${css}${script}<script defer src="/analytics.js"></script></head><body><div id="root"><div>${shell.replace('<main id="view"></main>',`<main id="view">${content}</main>`)}</div></div><script id="page-data" type="application/json">${jsonScript(payload)}</script></body></html>`;
+ const html=`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">${metadataHTML(meta)}<link rel="preconnect" href="https://i.ytimg.com"><link rel="icon" href="/favicon.svg" type="image/svg+xml">${hero?`<link rel="preload" as="image" href="${hero}" fetchpriority="high">`:''}${isListing?inlineCSS:css}${script}<script defer src="/analytics.js"></script></head><body><div id="root"><div>${shell.replace('<main id="view"></main>',`<main id="view">${content}</main>`)}</div></div><script id="page-data" type="application/json">${jsonScript(payload)}</script></body></html>`;
  await mkdir(path.dirname(path.join(dist,file)),{recursive:true});await writeFile(path.join(dist,file),html);
  if(!routes[p])routes[p]={file:'/'+file,pages:totalPages,kind,indexable:!noindex};
  const words=content.replace(/<[^>]*>/g,' ').replace(/&[^;]+;/g,' ').match(/[A-Za-z0-9]+(?:['’-][A-Za-z0-9]+)*/g)||[];
@@ -59,7 +62,7 @@ const homeVideos=sortVideos(videos.filter(d=>d.shelf_life!=='news'));
 await mkdir(path.join(dist,'data/home'),{recursive:true});
 // Small static pages keep scrolling off the full catalog download as well.
 for(let start=0;start<homeVideos.length+36;start+=36){
- await writeFile(path.join(dist,'data/home',String(start/36+1)+'.json'),JSON.stringify(homeVideos.slice(start,start+36)));
+ await writeFile(path.join(dist,'data/home',String(start/36+1)+'.json'),JSON.stringify(homeVideos.slice(start,start+36).map(cardData)));
 }
 const homeItems=homeVideos.slice(0,36);
 await emit('/','home','',`<h1 class="sr-only">Videos shared on Hacker News</h1>${typeChips('all')}${filterbar}<div class="grid" id="grid">${homeItems.map(card).join('')}</div><nav class="pagination"><a class="pill" href="/browse">Browse all videos</a></nav>`,{items:homeItems,hero:img(homeItems[0])});

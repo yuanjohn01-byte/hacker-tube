@@ -15,7 +15,7 @@ export async function api(path) {
     if(url.pathname === '/api/video' && initialPage.video) return {video:initialPage.video,comments:initialPage.comments || await json('comments/'+p.get('vid'))};
     if(url.pathname === '/api/related' && initialPage.related) return initialPage.related;
   }
-  const hasFilters=['cat','era','date','type','dur','gems','evergreen','sort'].some(k=>p.get(k));
+  const hasFilters=['era','date','type','dur','gems','evergreen','sort'].some(k=>p.get(k));
   if(initialPage?.items?.length && !hasFilters) {
     const start=(initialPage.page-1)*36;
     const expected=initialPage.path.startsWith('/c/')?p.get('cat')===initialPage.path.slice(3):initialPage.path.startsWith('/a/')?p.get('area')===initialPage.path.slice(3):initialPage.path==='/browse'&&!p.get('cat')&&!p.get('area');

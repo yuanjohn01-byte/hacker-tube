@@ -16,7 +16,7 @@ The existing video catalogue still uses `vid` and `hn` records. `src/sources.js`
 
 - Sources, type chips, Saved naming and 16:9 visual treatments are implemented.
 - Video cards show existing HN counts/year spans; zero-recommendation records are not given invented endorsements.
-- Books/papers/repos have illustrative cards and detail actions; real data sources remain Soon.
+- Books/papers/repos/podcasts have illustrative cards and detail actions; real data sources remain Soon.
 - Video search is grouped and has a See all path; other types have no verified search index yet.
 - Video filters support category, first recommendation era, duration and recommendation sorting. Future types need filters backed by their actual fields.
 - A persistent podcast mini player is not implemented yet. Current full-document navigation must be adapted before claiming uninterrupted playback.
@@ -32,5 +32,8 @@ Books: titles/authors from the owner-supplied Books HTML; no recommendation evid
 - https://github.com/python/cpython
 - https://github.com/react/react
 - https://github.com/torvalds/linux
+- https://latent.space/p/arca/
+- https://latent.space/p/supabase/
+- https://latent.space/p/how_anthropic_ships_the_1_llm_in_the_world_safely_separating_the_brain_from_the_hands/
 
 No tokens, raw HN corpus, personal configuration, deployment evidence or local data snapshots belong in Git.

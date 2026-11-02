@@ -24,7 +24,7 @@
       "!/data/*",
       "!/og/*",
       "!/favicon.svg",
-      "!/logo.png",
+      "!/analytics.js",
       "!/robots.txt",
       "!/sitemap.xml",
       "!/video-sitemap.xml"

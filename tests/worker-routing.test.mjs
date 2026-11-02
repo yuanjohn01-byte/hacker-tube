@@ -1,0 +1,13 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import vm from 'node:vm';
+import {readFile} from 'node:fs/promises';
+const routes=JSON.parse(await readFile(new URL('../cloudflare/routes.generated.json',import.meta.url),'utf8'));
+const source=(await readFile(new URL('../cloudflare/worker.js',import.meta.url),'utf8')).replace("import routes from './routes.generated.json';",'').replace('export default','globalThis.worker =');
+const context=vm.createContext({routes,URL,URLSearchParams,Response,Request,Headers,HTMLRewriter:class{on(){return this}transform(r){return r}}});
+vm.runInContext(source,context);
+const files=[];const env={ASSETS:{async fetch(r){files.push(new URL(r.url).pathname);return new Response('<html></html>',{headers:{'Content-Type':'text/html'}})}}};
+test('canonical redirect preserves path and query in one hop',async()=>{const r=await context.worker.fetch(new Request('http://www.hacker-tube.org/C/Functional-Programming/?page=2'),env);assert.equal(r.status,308);assert.equal(r.headers.get('location'),'https://hacker-tube.org/c/functional-programming?page=2');});
+test('unknown routes return 404; valid filtered pages are noindex',async()=>{assert.equal((await context.worker.fetch(new Request('https://hacker-tube.org/not-real'),env)).status,404);const r=await context.worker.fetch(new Request('https://hacker-tube.org/?source=books'),env);assert.equal(r.status,200);assert.match(r.headers.get('x-robots-tag'),/noindex/);assert.equal(files.at(-1),'/books.html');});
+test('pagination uses generated page files and rejects impossible pages',async()=>{const r=await context.worker.fetch(new Request('https://hacker-tube.org/browse?page=2'),env);assert.equal(r.status,200);assert.equal(files.at(-1),'/browse--page-2.html');assert.equal((await context.worker.fetch(new Request('https://hacker-tube.org/browse?page=99999'),env)).status,404);});
+test('analytics is production-only and initializes the supplied property once',async()=>{const code=await readFile(new URL('../public/analytics.js',import.meta.url),'utf8');for(const host of ['127.0.0.1','hacker-tube.org']){const appended=[],window={};const c=vm.createContext({location:{hostname:host},window,document:{createElement:()=>({}),head:{appendChild:x=>appended.push(x)}}});vm.runInContext(code,c);assert.equal(appended.length,host==='127.0.0.1'?0:1);if(appended.length){assert.equal(window.dataLayer[1][1],'G-59MT0DEK42');assert.match(appended[0].src,/G-59MT0DEK42/);}}});

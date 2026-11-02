@@ -24,6 +24,8 @@ With the normalized data present:
 corepack pnpm build
 corepack pnpm test
 corepack pnpm test:sites
+corepack pnpm test:seo
+node --test tests/worker-routing.test.mjs
 python3 -m unittest discover -s tests -v
 python3 scripts/preview-seo.py
 ```

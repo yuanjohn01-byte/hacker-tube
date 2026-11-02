@@ -8,6 +8,7 @@ export default {async fetch(request,env){
  let pathname;
  try{if(/%2f|%5c/i.test(u.pathname))throw 0;pathname=decodeURIComponent(u.pathname);}catch{return errorPage(request,env);}
  pathname=pathname.replace(/\/{2,}/g,'/').replace(/\/$/,'')||'/';
+ if(pathname==='/index.html')pathname='/';
  if(pathname.endsWith('.html'))pathname=pathname.slice(0,-5)||'/';
  const segments=pathname.split('/');segments[1]=(segments[1]||'').toLowerCase();
  if(['a','c','p'].includes(segments[1]))segments[2]=segments[2]?.toLowerCase();

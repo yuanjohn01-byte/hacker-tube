@@ -20,7 +20,7 @@ The existing video catalogue still uses `vid` and `hn` records. `src/sources.js`
 - Video search is grouped and has a See all path; other types have no verified search index yet.
 - Video filters support category, first recommendation era, duration and recommendation sorting. Future types need filters backed by their actual fields.
 - A persistent podcast mini player is not implemented yet. Current full-document navigation must be adapted before claiming uninterrupted playback.
-- SEO production validation, title-length exceptions, full route validation and deployment are still pending. Do not claim the SEO release is live.
+- The frontend/SEO/GA4 release is live as of 2026-11-02. Sampled production routes, canonical redirects, real 404s, OG and sitemaps passed. Long original video titles and two duplicate-title pairs remain disclosed in seo/REPORT.md. Google indexing, field performance and GA4 backend receipt are not verified.
 
 ## Example sources
 

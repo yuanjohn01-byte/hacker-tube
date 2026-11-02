@@ -7,7 +7,7 @@ Start with people's recommendations, then use software to organize them. Video p
 ## Status
 
 - Video browsing, topics, playlists, search, likes, history and saved items.
-- Page-specific metadata, static HTML generation, sitemaps and Open Graph images are implemented locally; release verification is still in progress.
+- Page-specific metadata, static HTML generation, sitemaps and Open Graph images are deployed; production page, redirect, 404 and sitemap checks passed on November 2, 2026.
 - Sources navigation is prepared for podcasts, papers, books and GitHub. These collections are **Soon**. Illustrative examples are labeled and have no fabricated HN counts or comments.
 - The GitHub collection pipeline is at the preparation stage, with collection and classification disabled. See [GitHub preparation](docs/github-preparation.md).
 - Podcast playback, real cross-source search and source-specific live metadata require actual collected data and are not shipped features yet.

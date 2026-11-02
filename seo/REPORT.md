@@ -55,3 +55,13 @@ Experience is supported by traceable source comments, not first-hand testing by 
 - Video structured data: https://developers.google.com/search/docs/appearance/structured-data/video
 - JavaScript SEO: https://developers.google.com/search/docs/crawling-indexing/javascript/javascript-seo-basics
 - Crawlable links: https://developers.google.com/search/docs/crawling-indexing/links-crawlable
+
+## Production verification completed
+
+On 2026-11-02 the Cloudflare deployment activated version `a7290642-7254-4265-8757-1070d7cb4f08` at 100% traffic. Sixteen live URL checks covered content pages, source/query pages, invalid paths, invalid pagination, OG, analytics, both sitemaps and HTTP/HTTPS www redirects. Content pages returned 200, invalid routes 404, and www normalized in one 308 redirect preserving path/query. The XML sitemaps contained 7,462 and 6,454 URLs respectively. The live browser displayed 36 initial video cards and loaded one Google tag for G-59MT0DEK42. This verifies tag installation, not receipt in the GA4 reporting backend. workers.dev and version previews remain disabled.
+
+Wrangler uploaded and activated the release, then reported insufficient permission while reading zone routes. Account-level deployment status and actual custom-domain responses independently confirmed the release; permissions were not expanded.
+
+GSC submission targets:
+- https://hacker-tube.org/sitemap.xml
+- https://hacker-tube.org/video-sitemap.xml

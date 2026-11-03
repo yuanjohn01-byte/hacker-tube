@@ -22,3 +22,6 @@ design-qa.md
 *.sqlite
 *.sqlite3
 *.db
+
+.build-cache/
+cloudflare/runtime.generated.json

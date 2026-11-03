@@ -1,7 +1,8 @@
+import runtime from './runtime.generated.json';
 import routes from './routes.generated.json';
 const ORIGIN='https://hacker-tube.org';
 const FILTERS=['source','item','cat','era','date','type','dur','gems','evergreen','sort'];
-function responseHeaders(response,robots){const h=new Headers(response.headers);h.set('X-Content-Type-Options','nosniff');h.set('Referrer-Policy','strict-origin-when-cross-origin');if(robots)h.set('X-Robots-Tag',robots);return h;}
+function responseHeaders(response,robots){const h=new Headers(response.headers);h.set('X-Content-Type-Options','nosniff');h.set('Referrer-Policy','strict-origin-when-cross-origin');for(const k of ['ETag','Last-Modified','Content-Length'])h.delete(k);h.set('Cache-Control','no-cache');if(robots)h.set('X-Robots-Tag',robots);return h;}
 export default {async fetch(request,env){
  const u=new URL(request.url);
  if(!['GET','HEAD'].includes(request.method))return new Response('Method not allowed',{status:405,headers:{Allow:'GET, HEAD'}});
@@ -31,11 +32,11 @@ export default {async fetch(request,env){
  const canonical=ORIGIN+canonicalPath+(allowed.size?'?'+allowed:'');
  const file=page>1?entry.file.replace(/\.html$/,'--page-'+page+'.html'):entry.file;
  const target=new URL(file,ORIGIN);
- const asset=await env.ASSETS.fetch(new Request(target,{method:request.method,headers:request.headers}));
+ const asset=await env.ASSETS.fetch(new Request(target,{method:request.method,headers:assetHeaders(request)}));
  if(asset.status!==200)return errorPage(request,env);
  const noindex=filtered||isSearch||!entry.indexable;
  let response=new Response(asset.body,{status:200,headers:responseHeaders(asset,noindex?'noindex, follow':undefined)});
- response=new HTMLRewriter()
+ response=renderer()
   .on('link[rel="canonical"]',{element(e){e.setAttribute('href',canonical);}})
   .on('meta[property="og:url"]',{element(e){e.setAttribute('content',canonical);}})
   .on('meta[name="robots"]',{element(e){if(noindex)e.setAttribute('content','noindex,follow');}})
@@ -45,5 +46,14 @@ export default {async fetch(request,env){
 }};
 async function errorPage(request,env){
  const asset=await env.ASSETS.fetch(new Request(new URL('/404.html',ORIGIN),{method:request.method}));
- return new Response(asset.body,{status:404,headers:responseHeaders(asset,'noindex, follow')});
+ return renderer().transform(new Response(asset.body,{status:404,headers:responseHeaders(asset,'noindex, follow')}));
+}
+
+// The content asset's validators cannot validate the composed HTML after a shell release.
+function assetHeaders(request){const h=new Headers(request.headers);for(const k of ['If-None-Match','If-Modified-Since','Range','If-Range'])h.delete(k);return h;}
+function renderer(){return new HTMLRewriter()
+ .on('template[data-site-styles]',{element(e){e.replace(e.getAttribute('data-site-styles')==='inline'?runtime.inlineStyles:runtime.styles,{html:true});}})
+ .on('template[data-site-entry]',{element(e){e.replace(runtime.entry,{html:true});}})
+ .on('template[data-site-before]',{element(e){e.replace(runtime.before,{html:true});}})
+ .on('template[data-site-after]',{element(e){e.replace(runtime.after,{html:true});}});
 }

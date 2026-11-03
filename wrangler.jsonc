@@ -14,7 +14,7 @@
     }
   ],
   "assets": {
-    "directory": "./dist/client",
+    "directory": "./dist/cloudflare",
     "binding": "ASSETS",
     "html_handling": "none",
     "not_found_handling": "none",

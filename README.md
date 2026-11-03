@@ -41,7 +41,7 @@ The SEO preview is served at `http://127.0.0.1:4176`. It previews generated page
 - `pipeline/`, `config/`: independent GitHub collection preparation.
 - `docs/DEVELOPMENT_HANDOFF.md`: frontend/data coordination and current limitations.
 
-Use only this project's `wrangler.jsonc` for deployment. Authenticate outside the repository. A build generates `cloudflare/routes.generated.json`; never deploy before building. The separate `worker/` and `.openai/` files retain prototype hosting compatibility.
+Use only this project's `wrangler.jsonc` for deployment. Authenticate outside the repository. A build generates `cloudflare/routes.generated.json`, `cloudflare/runtime.generated.json` and `dist/cloudflare`; never deploy before building. Shared JS/CSS/navigation is composed by the Worker so UI-only releases do not re-upload the content pages. See [incremental release workflow](docs/release-workflow.md). The separate `worker/` and `.openai/` files retain prototype hosting compatibility.
 
 ## Credits and rights
 

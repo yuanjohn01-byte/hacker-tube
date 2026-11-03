@@ -49,3 +49,11 @@ Actual source-edit/rebuild experiments (all temporary edits restored before depl
 These are local build/asset-diff measurements, not predicted network deployment times. The final restored manifest exactly matches the baseline. Public data and the other chat's uncommitted pipeline files were not changed in the release.
 
 21 automated tests passed. A separate smoke test in the actual Cloudflare workerd runtime verified homepage, directory pagination, video detail, Books and 404: shared styles/scripts/navigation are inserted, no placeholders remain, and obsolete conditional cache headers cannot return stale composed HTML. Homepage output is still 70,655 bytes, identical to the performance-optimized page before the migration.
+
+## Production verification
+
+- Migration: 7,472 HTML templates uploaded once in 339.15 seconds; Worker upload completed in 369.06 seconds. Migration version `0cb55936-79b8-4a7a-829d-edb8f8a5e633` served 100% of traffic.
+- Subsequent real unchanged deployment: **no updated static assets to upload**; Worker upload completed in **40.99 seconds**, total command wall time **50.94 seconds**. This measures an unchanged deployment, not a promise that every future change takes the same time. Add approximately 20 seconds for the separately measured build.
+- Both deployment commands reached publication, then reported the pre-existing zone route-list permission error. Deployment API and live HTTP/browser checks independently confirmed activation; token permissions were not broadened.
+- Post-migration report: https://pagespeed.web.dev/analysis/https-hacker-tube-org/tbm8d0a11n . Mobile and desktop performance/accessibility/best-practices/SEO all **100**. Mobile LCP 1.5 s, desktop LCP 0.5 s, CLS 0. These are individual lab runs, not a field-data guarantee.
+- Live homepage still returns 70,655 bytes with complete first-screen content, inline styles and the same hashed JS entry. The sitemap, directory pagination, category, detail and reserved Books page all returned 200.
